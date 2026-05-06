@@ -78,8 +78,13 @@ export default function Dashboard() {
         <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/10 rounded-full translate-y-6 -translate-x-6" />
         <div className="relative">
           <p className="text-blue-100 text-sm mb-1">{dateStr}</p>
-          <h1 className="text-2xl font-bold">
-            {greeting}！{currentPet?.name} {currentPet?.avatar}
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            {greeting}！{currentPet?.name}
+            {currentPet?.avatar && (
+              currentPet.avatar.startsWith('data:')
+                ? <img src={currentPet.avatar} alt="" className="w-8 h-8 rounded-full object-cover inline-block" />
+                : <span>{currentPet.avatar}</span>
+            )}
           </h1>
           <p className="text-blue-100 text-sm mt-1">今天一起保持健康吧</p>
           {data.lastWeight && (

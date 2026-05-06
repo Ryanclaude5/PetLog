@@ -36,6 +36,14 @@ const ALL_NAV = [
   { path: '/pets', label: '寵物管理', icon: PawPrint, color: 'text-pink-500', bg: 'bg-pink-50' },
 ];
 
+function Avatar({ src, size = 'md', className = '' }) {
+  const dim = size === 'sm' ? 'w-9 h-9 text-lg' : size === 'lg' ? 'w-12 h-12 text-2xl' : 'w-10 h-10 text-xl';
+  const isImage = src && src.startsWith('data:');
+  return isImage
+    ? <img src={src} alt="" className={`${dim} rounded-xl object-cover flex-shrink-0 ${className}`} />
+    : <span className={`${dim} flex items-center justify-center flex-shrink-0 ${className}`}>{src || '🐾'}</span>;
+}
+
 function LogoutButton() {
   const { user, signOut } = useAuth();
   if (!user) return null;
@@ -68,8 +76,8 @@ function Sidebar({ isOpen, onClose }) {
           <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-6 translate-x-6" />
           <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/10 rounded-full translate-y-4 -translate-x-4" />
           <div className="relative flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-2xl shadow-lg">
-              {currentPet?.avatar || '🐾'}
+            <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center shadow-lg overflow-hidden">
+              <Avatar src={currentPet?.avatar} size="lg" />
             </div>
             <div>
               <h1 className="font-bold text-white text-lg leading-tight">{currentPet?.name || 'PetLog'}</h1>
@@ -90,13 +98,13 @@ function Sidebar({ isOpen, onClose }) {
                   key={pet.id}
                   onClick={() => { switchPet(pet.id); }}
                   title={pet.name}
-                  className={`flex-shrink-0 w-9 h-9 rounded-xl text-lg flex items-center justify-center border-2 transition-all ${
+                  className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center border-2 transition-all overflow-hidden ${
                     currentPet?.id === pet.id
                       ? 'border-blue-400 bg-white shadow-sm scale-110'
                       : 'border-gray-200 bg-white hover:border-gray-300'
                   }`}
                 >
-                  {pet.avatar}
+                  <Avatar src={pet.avatar} size="sm" />
                 </button>
               ))}
               <Link
@@ -163,7 +171,7 @@ function Layout({ children }) {
           </button>
           <h2 className="font-semibold text-gray-800">{currentPage?.label || '儀表板'}</h2>
           <div className="ml-auto flex items-center gap-2">
-            <span className="text-lg">{currentPet?.avatar}</span>
+            <Avatar src={currentPet?.avatar} size="sm" />
             <span className="text-sm font-medium text-gray-500">{currentPet?.name}</span>
           </div>
         </header>
@@ -175,7 +183,7 @@ function Layout({ children }) {
             <p className="text-xs text-gray-400">{new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}</p>
           </div>
           <Link to="/pets" className="flex items-center gap-2 bg-white border border-gray-200 rounded-2xl px-3 py-2 hover:shadow-sm transition-shadow">
-            <span className="text-xl">{currentPet?.avatar}</span>
+            <Avatar src={currentPet?.avatar} size="sm" />
             <div className="text-left">
               <p className="text-sm font-semibold text-gray-800 leading-none">{currentPet?.name}</p>
               <p className="text-xs text-gray-400 mt-0.5">切換寵物</p>

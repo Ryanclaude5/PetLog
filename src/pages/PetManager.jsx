@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, X, Check, Star } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Star, Camera } from 'lucide-react';
 import { petsStorage } from '../utils/storage';
 import { usePet } from '../context/PetContext';
 
-const AVATARS = ['🐕', '🐩', '🦮', '🐕‍🦺', '🐈', '🐈‍⬛', '🐇', '🐹', '🦜', '🐠', '🐢', '🦎', '🐓', '🐾'];
 const GENDERS = ['公', '母', '未知'];
 
 const defaultForm = {
@@ -11,7 +10,7 @@ const defaultForm = {
   breed: '',
   gender: '公',
   birthDate: '',
-  avatar: '🐕',
+  avatar: '',
   chipId: '',
   note: '',
 };
@@ -22,83 +21,103 @@ function PetForm({ pet, onClose, onSave }) {
     breed: pet.breed || '',
     gender: pet.gender || '公',
     birthDate: pet.birthDate || '',
-    avatar: pet.avatar || '🐕',
+    avatar: pet.avatar || '',
     chipId: pet.chipId || '',
     note: pet.note || '',
   } : defaultForm);
 
   function set(k, v) { setForm(p => ({ ...p, [k]: v })); }
 
+  function handleAvatarChange(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => set('avatar', ev.target.result);
+    reader.readAsDataURL(file);
+  }
+
+  const isImage = form.avatar && form.avatar.startsWith('data:');
+
+  const inputCls = 'w-full px-4 py-3 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all';
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-4">
-      <div className="bg-white rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-5 border-b border-gray-100 sticky top-0 bg-white rounded-t-3xl">
+      <div className="bg-white rounded-3xl w-full max-w-sm max-h-[90vh] overflow-y-auto mx-auto">
+        <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-3xl">
           <h3 className="font-bold text-gray-800">{pet ? '編輯寵物資料' : '新增寵物'}</h3>
           <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
             <X size={16} />
           </button>
         </div>
 
-        <form onSubmit={e => { e.preventDefault(); onSave(form); }} className="p-5 space-y-5">
-          {/* Avatar Picker */}
-          <div>
-            <label className="text-xs text-gray-400 mb-2 block">選擇頭像</label>
-            <div className="flex flex-wrap gap-2">
-              {AVATARS.map(a => (
-                <button key={a} type="button" onClick={() => set('avatar', a)}
-                  className={`w-11 h-11 rounded-2xl text-2xl flex items-center justify-center border-2 transition-all ${
-                    form.avatar === a ? 'border-blue-400 bg-blue-50 scale-110' : 'border-gray-100 bg-gray-50 hover:border-gray-300'
-                  }`}>
-                  {a}
-                </button>
-              ))}
-            </div>
+        <form onSubmit={e => { e.preventDefault(); onSave(form); }} className="px-5 py-5 space-y-4">
+          {/* Avatar Upload */}
+          <div className="flex flex-col items-center py-2">
+            <label className="cursor-pointer group relative">
+              <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300 group-hover:border-blue-400 transition-colors">
+                {isImage ? (
+                  <img src={form.avatar} alt="avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="flex flex-col items-center gap-0.5 text-gray-400">
+                    <Camera size={22} />
+                    <span className="text-xs">上傳</span>
+                  </div>
+                )}
+              </div>
+              {isImage && (
+                <div className="absolute inset-0 rounded-full bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Camera size={18} className="text-white" />
+                </div>
+              )}
+              <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
+            </label>
+            <p className="text-xs text-gray-400 mt-2">點擊上傳寵物照片</p>
           </div>
 
           <div>
-            <label className="text-xs text-gray-400 mb-1 block">寵物名稱 *</label>
+            <label className="text-xs text-gray-500 font-medium mb-1.5 block">寵物名稱 *</label>
             <input type="text" placeholder="例：小飛、咪咪" value={form.name}
-              onChange={e => set('name', e.target.value)} className="input-field" required />
+              onChange={e => set('name', e.target.value)} className={inputCls} required />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-gray-400 mb-1 block">品種</label>
-              <input type="text" placeholder="例：柴犬、米克斯" value={form.breed}
-                onChange={e => set('breed', e.target.value)} className="input-field" />
+              <label className="text-xs text-gray-500 font-medium mb-1.5 block">品種</label>
+              <input type="text" placeholder="例：柴犬" value={form.breed}
+                onChange={e => set('breed', e.target.value)} className={inputCls} />
             </div>
             <div>
-              <label className="text-xs text-gray-400 mb-1 block">性別</label>
-              <select value={form.gender} onChange={e => set('gender', e.target.value)} className="input-field">
+              <label className="text-xs text-gray-500 font-medium mb-1.5 block">性別</label>
+              <select value={form.gender} onChange={e => set('gender', e.target.value)} className={inputCls}>
                 {GENDERS.map(g => <option key={g}>{g}</option>)}
               </select>
             </div>
           </div>
 
           <div>
-            <label className="text-xs text-gray-400 mb-1 block">出生日期</label>
-            <input type="date" value={form.birthDate} onChange={e => set('birthDate', e.target.value)} className="input-field" />
+            <label className="text-xs text-gray-500 font-medium mb-1.5 block">出生日期</label>
+            <input type="date" value={form.birthDate} onChange={e => set('birthDate', e.target.value)} className={inputCls} />
           </div>
 
           <div>
-            <label className="text-xs text-gray-400 mb-1 block">晶片號碼</label>
+            <label className="text-xs text-gray-500 font-medium mb-1.5 block">晶片號碼</label>
             <input type="text" placeholder="15位數晶片號碼（選填）" value={form.chipId}
-              onChange={e => set('chipId', e.target.value)} className="input-field" />
+              onChange={e => set('chipId', e.target.value)} className={inputCls} />
           </div>
 
           <div>
-            <label className="text-xs text-gray-400 mb-1 block">備註</label>
+            <label className="text-xs text-gray-500 font-medium mb-1.5 block">備註</label>
             <input type="text" placeholder="過敏食物、特殊狀況..." value={form.note}
-              onChange={e => set('note', e.target.value)} className="input-field" />
+              onChange={e => set('note', e.target.value)} className={inputCls} />
           </div>
 
-          <div className="flex gap-2 pt-2">
-            <button type="submit" className="btn-primary flex-1">
-              <span className="flex items-center justify-center gap-2">
-                <Check size={16} />{pet ? '儲存變更' : '新增寵物'}
-              </span>
+          <div className="flex flex-col gap-2 pt-2">
+            <button type="submit" className="w-full py-3.5 rounded-full bg-blue-500 text-white font-semibold text-sm hover:bg-blue-600 active:scale-95 transition-all">
+              {pet ? '儲存變更' : '新增寵物'}
             </button>
-            <button type="button" onClick={onClose} className="btn-secondary">取消</button>
+            <button type="button" onClick={onClose} className="w-full py-3 rounded-full bg-gray-100 text-gray-600 font-medium text-sm hover:bg-gray-200 transition-all">
+              取消
+            </button>
           </div>
         </form>
       </div>
@@ -161,10 +180,16 @@ export default function PetManager() {
                 <div className="flex items-center gap-4">
                   {/* Avatar */}
                   <button onClick={() => switchPet(pet.id)}
-                    className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0 border-2 transition-all ${
+                    className={`w-16 h-16 rounded-2xl flex-shrink-0 border-2 transition-all overflow-hidden ${
                       isActive ? 'border-blue-400 bg-white shadow-md' : 'border-gray-100 bg-gray-50'
                     }`}>
-                    {pet.avatar}
+                    {pet.avatar && pet.avatar.startsWith('data:') ? (
+                      <img src={pet.avatar} alt={pet.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="w-full h-full flex items-center justify-center text-3xl">
+                        {pet.avatar || '🐾'}
+                      </span>
+                    )}
                   </button>
 
                   {/* Info */}
