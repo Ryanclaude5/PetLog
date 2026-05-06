@@ -2,17 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { Plus, Trash2, Edit2, X, Check, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { weightStorage } from '../utils/storage';
+import { usePet } from '../context/PetContext';
 
 const defaultForm = { date: new Date().toISOString().split('T')[0], weight: '', note: '' };
 
 export default function WeightRecord() {
+  const { currentPet } = usePet();
+  const pid = currentPet?.id;
   const [records, setRecords] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState(defaultForm);
 
-  const load = () => setRecords(weightStorage.getAll());
-  useEffect(() => { load(); }, []);
+  const load = () => setRecords(weightStorage.getAll(pid));
+  useEffect(() => { load(); }, [pid]);
 
   function submit(e) {
     e.preventDefault();
@@ -20,7 +23,7 @@ export default function WeightRecord() {
     if (editId) {
       weightStorage.update(editId, form);
     } else {
-      weightStorage.add(form);
+      weightStorage.add(form, pid);
     }
     setShowForm(false);
     setEditId(null);

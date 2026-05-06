@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Scale, Footprints, ClipboardList, Heart, Bell, Package, ChevronRight, Plus } from 'lucide-react';
 import { weightStorage, walkStorage, bowelStorage, foodStorage, vaccineStorage } from '../utils/storage';
+import { usePet } from '../context/PetContext';
 
 function StatCard({ to, icon, label, value, unit, sub, color, bgColor }) {
   return (
@@ -31,6 +32,9 @@ function QuickBtn({ to, icon, label, color }) {
 }
 
 export default function Dashboard() {
+  const { currentPet } = usePet();
+  const pid = currentPet?.id;
+
   const [data, setData] = useState({
     todayWalks: [],
     todayBowels: [],
@@ -40,13 +44,13 @@ export default function Dashboard() {
   });
 
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
-    const todayWalks = walkStorage.getToday();
-    const todayBowels = bowelStorage.getToday();
-    const lastWeight = weightStorage.getLast();
-    const lowFood = foodStorage.getAll().filter(f => parseFloat(f.currentAmount) <= parseFloat(f.minAmount));
+    if (!pid) return;
+    const todayWalks = walkStorage.getToday(pid);
+    const todayBowels = bowelStorage.getToday(pid);
+    const lastWeight = weightStorage.getLast(pid);
+    const lowFood = foodStorage.getAll(pid).filter(f => f.minAmount && parseFloat(f.currentAmount) <= parseFloat(f.minAmount));
 
-    const vaccines = vaccineStorage.getAll();
+    const vaccines = vaccineStorage.getAll(pid);
     const soon = new Date();
     soon.setDate(soon.getDate() + 30);
     const upcomingVaccines = vaccines.filter(v => {
@@ -56,7 +60,7 @@ export default function Dashboard() {
     });
 
     setData({ todayWalks, todayBowels, lastWeight, lowFood, upcomingVaccines });
-  }, []);
+  }, [pid]);
 
   const now = new Date();
   const hour = now.getHours();
@@ -77,7 +81,7 @@ export default function Dashboard() {
         <div className="relative">
           <p className="text-blue-100 text-sm mb-1">{dateStr}</p>
           <h1 className="text-2xl font-bold">
-            {greeting}！小飛 🐾
+            {greeting}！{currentPet?.name} {currentPet?.avatar}
           </h1>
           <p className="text-blue-100 text-sm mt-1">今天一起保持健康吧</p>
           {data.lastWeight && (

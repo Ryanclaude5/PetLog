@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import {
   Home, Activity, Scale, Footprints, Heart,
-  Stethoscope, ClipboardList, Bell, Package, Menu, X, ChevronRight
+  Stethoscope, ClipboardList, Bell, Package,
+  Menu, X, ChevronRight, Plus, PawPrint
 } from 'lucide-react';
+import { PetProvider, usePet } from './context/PetContext';
 import Dashboard from './pages/Dashboard';
 import HealthReport from './pages/HealthReport';
 import WeightRecord from './pages/WeightRecord';
@@ -13,6 +15,7 @@ import MedicalRecord from './pages/MedicalRecord';
 import BowelRecord from './pages/BowelRecord';
 import VaccineReminder from './pages/VaccineReminder';
 import FoodInventory from './pages/FoodInventory';
+import PetManager from './pages/PetManager';
 
 const NAV = [
   { path: '/',              label: '儀表板',    icon: Home,          color: 'text-blue-500',   bg: 'bg-blue-50' },
@@ -26,16 +29,19 @@ const NAV = [
   { path: '/food',          label: '飼料存貨',  icon: Package,       color: 'text-orange-500', bg: 'bg-orange-50' },
 ];
 
+const ALL_NAV = [
+  ...NAV,
+  { path: '/pets', label: '寵物管理', icon: PawPrint, color: 'text-pink-500', bg: 'bg-pink-50' },
+];
+
 function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
+  const { currentPet, pets, switchPet } = usePet();
 
   return (
     <>
       {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/40 z-40 md:hidden backdrop-blur-sm"
-          onClick={onClose}
-        />
+        <div className="fixed inset-0 bg-black/40 z-40 md:hidden backdrop-blur-sm" onClick={onClose} />
       )}
       <aside className={`
         fixed top-0 left-0 h-full w-64 bg-white z-50 flex flex-col
@@ -44,16 +50,16 @@ function Sidebar({ isOpen, onClose }) {
         md:translate-x-0 md:static md:flex-shrink-0
         border-r border-gray-100
       `}>
-        {/* Pet Profile */}
-        <div className="bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 p-6 relative overflow-hidden">
+        {/* Current Pet Header */}
+        <div className="bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 p-5 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-6 translate-x-6" />
           <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/10 rounded-full translate-y-4 -translate-x-4" />
           <div className="relative flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-2xl shadow-lg">
-              🐕
+              {currentPet?.avatar || '🐾'}
             </div>
             <div>
-              <h1 className="font-bold text-white text-lg leading-tight">小飛</h1>
+              <h1 className="font-bold text-white text-lg leading-tight">{currentPet?.name || 'PetLog'}</h1>
               <p className="text-blue-100 text-xs mt-0.5">PetLog</p>
             </div>
           </div>
@@ -62,20 +68,45 @@ function Sidebar({ isOpen, onClose }) {
           </button>
         </div>
 
+        {/* Pet Switcher */}
+        {pets.length > 0 && (
+          <div className="px-3 py-2.5 border-b border-gray-100 bg-gray-50/50">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+              {pets.map(pet => (
+                <button
+                  key={pet.id}
+                  onClick={() => { switchPet(pet.id); }}
+                  title={pet.name}
+                  className={`flex-shrink-0 w-9 h-9 rounded-xl text-lg flex items-center justify-center border-2 transition-all ${
+                    currentPet?.id === pet.id
+                      ? 'border-blue-400 bg-white shadow-sm scale-110'
+                      : 'border-gray-200 bg-white hover:border-gray-300'
+                  }`}
+                >
+                  {pet.avatar}
+                </button>
+              ))}
+              <Link
+                to="/pets"
+                onClick={onClose}
+                className="flex-shrink-0 w-9 h-9 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:border-blue-400 hover:text-blue-400 transition-colors"
+              >
+                <Plus size={14} />
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Nav */}
         <nav className="flex-1 p-3 overflow-y-auto">
-          {NAV.map(({ path, label, icon: Icon, color, bg }) => {
+          {ALL_NAV.map(({ path, label, icon: Icon, color, bg }) => {
             const active = location.pathname === path;
             return (
               <Link
                 key={path}
                 to={path}
                 onClick={onClose}
-                className={`
-                  flex items-center gap-3 px-3 py-2.5 rounded-xl mb-0.5
-                  transition-all duration-150 group
-                  ${active ? 'bg-blue-50' : 'hover:bg-gray-50'}
-                `}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl mb-0.5 transition-all duration-150 group ${active ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
               >
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${active ? bg : 'bg-gray-100'}`}>
                   <Icon size={16} className={active ? color : 'text-gray-400 group-hover:text-gray-600'} />
@@ -100,7 +131,8 @@ function Sidebar({ isOpen, onClose }) {
 function Layout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const currentPage = NAV.find(n => n.path === location.pathname);
+  const { currentPet } = usePet();
+  const currentPage = ALL_NAV.find(n => n.path === location.pathname);
 
   return (
     <div className="flex h-screen bg-ios-bg overflow-hidden">
@@ -116,15 +148,25 @@ function Layout({ children }) {
             <Menu size={18} />
           </button>
           <h2 className="font-semibold text-gray-800">{currentPage?.label || '儀表板'}</h2>
-          <div className="ml-auto text-xl">{currentPage?.path === '/' ? '🐾' : ''}</div>
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-lg">{currentPet?.avatar}</span>
+            <span className="text-sm font-medium text-gray-500">{currentPet?.name}</span>
+          </div>
         </header>
 
         {/* Desktop Header */}
-        <header className="hidden md:flex items-center px-8 py-4 bg-white/50 backdrop-blur-md border-b border-gray-100 flex-shrink-0">
+        <header className="hidden md:flex items-center justify-between px-8 py-4 bg-white/50 backdrop-blur-md border-b border-gray-100 flex-shrink-0">
           <div>
             <h2 className="font-bold text-lg text-gray-900">{currentPage?.label || '儀表板'}</h2>
             <p className="text-xs text-gray-400">{new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}</p>
           </div>
+          <Link to="/pets" className="flex items-center gap-2 bg-white border border-gray-200 rounded-2xl px-3 py-2 hover:shadow-sm transition-shadow">
+            <span className="text-xl">{currentPet?.avatar}</span>
+            <div className="text-left">
+              <p className="text-sm font-semibold text-gray-800 leading-none">{currentPet?.name}</p>
+              <p className="text-xs text-gray-400 mt-0.5">切換寵物</p>
+            </div>
+          </Link>
         </header>
 
         <main className="flex-1 overflow-y-auto px-4 py-4 md:px-8 md:py-6">
@@ -135,22 +177,31 @@ function Layout({ children }) {
   );
 }
 
+function AppRoutes() {
+  return (
+    <Layout>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/health-report" element={<HealthReport />} />
+        <Route path="/weight" element={<WeightRecord />} />
+        <Route path="/walk" element={<WalkRecord />} />
+        <Route path="/injury" element={<InjuryRecord />} />
+        <Route path="/medical" element={<MedicalRecord />} />
+        <Route path="/bowel" element={<BowelRecord />} />
+        <Route path="/vaccine" element={<VaccineReminder />} />
+        <Route path="/food" element={<FoodInventory />} />
+        <Route path="/pets" element={<PetManager />} />
+      </Routes>
+    </Layout>
+  );
+}
+
 export default function App() {
   return (
     <Router>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/health-report" element={<HealthReport />} />
-          <Route path="/weight" element={<WeightRecord />} />
-          <Route path="/walk" element={<WalkRecord />} />
-          <Route path="/injury" element={<InjuryRecord />} />
-          <Route path="/medical" element={<MedicalRecord />} />
-          <Route path="/bowel" element={<BowelRecord />} />
-          <Route path="/vaccine" element={<VaccineReminder />} />
-          <Route path="/food" element={<FoodInventory />} />
-        </Routes>
-      </Layout>
+      <PetProvider>
+        <AppRoutes />
+      </PetProvider>
     </Router>
   );
 }

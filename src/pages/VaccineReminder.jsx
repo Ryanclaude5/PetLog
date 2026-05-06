@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, X, Check, Bell, Clock, CheckCircle } from 'lucide-react';
 import { vaccineStorage } from '../utils/storage';
+import { usePet } from '../context/PetContext';
 
 const VACCINE_TYPES = [
   '犬三合一疫苗', '狂犬病疫苗', '犬八合一疫苗', '犬四合一疫苗',
@@ -110,19 +111,21 @@ function VaccineForm({ record, onClose, onSave }) {
 }
 
 export default function VaccineReminder() {
+  const { currentPet } = usePet();
+  const pid = currentPet?.id;
   const [records, setRecords] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editRecord, setEditRecord] = useState(null);
   const [tab, setTab] = useState('upcoming');
 
-  const load = () => setRecords(vaccineStorage.getAll());
-  useEffect(() => { load(); }, []);
+  const load = () => setRecords(vaccineStorage.getAll(pid));
+  useEffect(() => { load(); }, [pid]);
 
   function save(form) {
     if (editRecord) {
       vaccineStorage.update(editRecord.id, form);
     } else {
-      vaccineStorage.add(form);
+      vaccineStorage.add(form, pid);
     }
     setShowForm(false);
     setEditRecord(null);

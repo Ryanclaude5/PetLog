@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, X, Check, Package, AlertTriangle } from 'lucide-react';
 import { foodStorage } from '../utils/storage';
+import { usePet } from '../context/PetContext';
 
 const FOOD_TYPES = ['主食乾糧', '主食濕食', '零食點心', '保健品', '處方飼料', '其他'];
 
@@ -137,18 +138,20 @@ function FoodForm({ record, onClose, onSave }) {
 }
 
 export default function FoodInventory() {
+  const { currentPet } = usePet();
+  const pid = currentPet?.id;
   const [records, setRecords] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editRecord, setEditRecord] = useState(null);
 
-  const load = () => setRecords(foodStorage.getAll());
-  useEffect(() => { load(); }, []);
+  const load = () => setRecords(foodStorage.getAll(pid));
+  useEffect(() => { load(); }, [pid]);
 
   function save(form) {
     if (editRecord) {
       foodStorage.update(editRecord.id, form);
     } else {
-      foodStorage.add(form);
+      foodStorage.add(form, pid);
     }
     setShowForm(false);
     setEditRecord(null);

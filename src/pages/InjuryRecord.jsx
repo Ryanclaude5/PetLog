@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, X, Check, AlertCircle } from 'lucide-react';
 import { injuryStorage } from '../utils/storage';
+import { usePet } from '../context/PetContext';
 
 const STATUS_CONFIG = {
   '處理中': { bg: 'bg-red-100', text: 'text-red-600', dot: 'bg-red-500', border: 'border-red-200' },
@@ -101,19 +102,21 @@ function InjuryForm({ record, onClose, onSave }) {
 }
 
 export default function InjuryRecord() {
+  const { currentPet } = usePet();
+  const pid = currentPet?.id;
   const [records, setRecords] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editRecord, setEditRecord] = useState(null);
   const [filter, setFilter] = useState('全部');
 
-  const load = () => setRecords(injuryStorage.getAll());
-  useEffect(() => { load(); }, []);
+  const load = () => setRecords(injuryStorage.getAll(pid));
+  useEffect(() => { load(); }, [pid]);
 
   function save(form) {
     if (editRecord) {
       injuryStorage.update(editRecord.id, form);
     } else {
-      injuryStorage.add(form);
+      injuryStorage.add(form, pid);
     }
     setShowForm(false);
     setEditRecord(null);

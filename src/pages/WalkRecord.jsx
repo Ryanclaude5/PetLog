@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Plus, Trash2, Edit2, X, Check, MapPin, Clock, Route, Navigation } from 'lucide-react';
 import { walkStorage } from '../utils/storage';
+import { usePet } from '../context/PetContext';
 
 const defaultForm = {
   date: new Date().toISOString().split('T')[0],
@@ -213,19 +214,21 @@ function FormModal({ record, onClose, onSave }) {
 }
 
 export default function WalkRecord() {
+  const { currentPet } = usePet();
+  const pid = currentPet?.id;
   const [records, setRecords] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editRecord, setEditRecord] = useState(null);
   const [viewMap, setViewMap] = useState(null);
 
-  const load = () => setRecords(walkStorage.getAll());
-  useEffect(() => { load(); }, []);
+  const load = () => setRecords(walkStorage.getAll(pid));
+  useEffect(() => { load(); }, [pid]);
 
   function save(form) {
     if (editRecord) {
       walkStorage.update(editRecord.id, form);
     } else {
-      walkStorage.add(form);
+      walkStorage.add(form, pid);
     }
     setShowForm(false);
     setEditRecord(null);

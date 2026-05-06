@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, X, Check } from 'lucide-react';
 import { bowelStorage } from '../utils/storage';
+import { usePet } from '../context/PetContext';
 
 const STATUS_CONFIG = {
   '正常': { bg: 'bg-green-100', text: 'text-green-700', dot: 'bg-green-500', emoji: '✅' },
@@ -129,19 +130,21 @@ function BowelForm({ record, onClose, onSave }) {
 }
 
 export default function BowelRecord() {
+  const { currentPet } = usePet();
+  const pid = currentPet?.id;
   const [records, setRecords] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editRecord, setEditRecord] = useState(null);
   const [filter, setFilter] = useState('全部');
 
-  const load = () => setRecords(bowelStorage.getAll());
-  useEffect(() => { load(); }, []);
+  const load = () => setRecords(bowelStorage.getAll(pid));
+  useEffect(() => { load(); }, [pid]);
 
   function save(form) {
     if (editRecord) {
       bowelStorage.update(editRecord.id, form);
     } else {
-      bowelStorage.add(form);
+      bowelStorage.add(form, pid);
     }
     setShowForm(false);
     setEditRecord(null);

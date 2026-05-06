@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { weightStorage, walkStorage, bowelStorage, injuryStorage } from '../utils/storage';
+import { usePet } from '../context/PetContext';
 
 function ScoreRing({ score, label, color }) {
   const r = 40;
@@ -30,21 +31,19 @@ function ScoreRing({ score, label, color }) {
 }
 
 export default function HealthReport() {
-  const [state, setState] = useState({
-    weights: [],
-    walks: [],
-    bowels: [],
-    injuries: [],
-  });
+  const { currentPet } = usePet();
+  const pid = currentPet?.id;
+  const [state, setState] = useState({ weights: [], walks: [], bowels: [], injuries: [] });
 
   useEffect(() => {
+    if (!pid) return;
     setState({
-      weights: weightStorage.getAll().slice(0, 30).reverse(),
-      walks: walkStorage.getAll().slice(0, 30).reverse(),
-      bowels: bowelStorage.getAll().slice(0, 30).reverse(),
-      injuries: injuryStorage.getAll(),
+      weights: weightStorage.getAll(pid).slice(0, 30).reverse(),
+      walks: walkStorage.getAll(pid).slice(0, 30).reverse(),
+      bowels: bowelStorage.getAll(pid).slice(0, 30).reverse(),
+      injuries: injuryStorage.getAll(pid),
     });
-  }, []);
+  }, [pid]);
 
   const activeInjuries = state.injuries.filter(i => i.status !== '已康復').length;
   const normalBowels = state.bowels.filter(b => b.status === '正常').length;
@@ -55,10 +54,7 @@ export default function HealthReport() {
     : 0;
   const overallScore = Math.round((bowelScore + walkScore + (activeInjuries > 0 ? 60 : 100)) / 3);
 
-  const recentWeightData = state.weights.slice(-14).map(w => ({
-    date: w.date.slice(5),
-    weight: parseFloat(w.weight),
-  }));
+  const recentWeightData = state.weights.slice(-14).map(w => ({ date: w.date.slice(5), weight: parseFloat(w.weight) }));
 
   const walkWeekData = (() => {
     const map = {};
@@ -153,8 +149,8 @@ export default function HealthReport() {
         <p className="section-title">數據摘要</p>
         <div className="divide-y divide-gray-50">
           {[
-            { label: '體重紀錄總筆數', value: `${weightStorage.getAll().length} 筆` },
-            { label: '最近體重', value: weightStorage.getLast() ? `${weightStorage.getLast().weight} kg` : '無' },
+            { label: '體重紀錄總筆數', value: `${weightStorage.getAll(pid).length} 筆` },
+            { label: '最近體重', value: weightStorage.getLast(pid) ? `${weightStorage.getLast(pid).weight} kg` : '無' },
             { label: '散步總次數', value: `${state.walks.length} 次` },
             { label: '排便紀錄總筆數', value: `${state.bowels.length} 筆` },
             { label: '正常排便率', value: state.bowels.length > 0 ? `${bowelScore}%` : 'N/A' },

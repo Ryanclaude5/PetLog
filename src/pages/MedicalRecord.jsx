@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, X, Check, Stethoscope, DollarSign } from 'lucide-react';
 import { medicalStorage } from '../utils/storage';
+import { usePet } from '../context/PetContext';
 
 const REASONS = ['例行健檢', '疫苗接種', '傷口處理', '皮膚問題', '腸胃問題', '耳朵問題', '眼睛問題', '骨科問題', '牙科', '其他'];
 
@@ -113,18 +114,20 @@ function MedicalForm({ record, onClose, onSave }) {
 }
 
 export default function MedicalRecord() {
+  const { currentPet } = usePet();
+  const pid = currentPet?.id;
   const [records, setRecords] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editRecord, setEditRecord] = useState(null);
 
-  const load = () => setRecords(medicalStorage.getAll());
-  useEffect(() => { load(); }, []);
+  const load = () => setRecords(medicalStorage.getAll(pid));
+  useEffect(() => { load(); }, [pid]);
 
   function save(form) {
     if (editRecord) {
       medicalStorage.update(editRecord.id, form);
     } else {
-      medicalStorage.add(form);
+      medicalStorage.add(form, pid);
     }
     setShowForm(false);
     setEditRecord(null);
