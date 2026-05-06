@@ -109,7 +109,7 @@ export default function InjuryRecord() {
   const [editRecord, setEditRecord] = useState(null);
   const [filter, setFilter] = useState('全部');
 
-  const load = () => setRecords(injuryStorage.getAll(pid));
+  const load = async () => setRecords(await injuryStorage.getAll(pid));
   useEffect(() => { load(); }, [pid]);
 
   function save(form) {

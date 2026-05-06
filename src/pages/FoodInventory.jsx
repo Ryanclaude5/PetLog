@@ -144,7 +144,7 @@ export default function FoodInventory() {
   const [showForm, setShowForm] = useState(false);
   const [editRecord, setEditRecord] = useState(null);
 
-  const load = () => setRecords(foodStorage.getAll(pid));
+  const load = async () => setRecords(await foodStorage.getAll(pid));
   useEffect(() => { load(); }, [pid]);
 
   function save(form) {

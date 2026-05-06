@@ -3,9 +3,11 @@ import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react
 import {
   Home, Activity, Scale, Footprints, Heart,
   Stethoscope, ClipboardList, Bell, Package,
-  Menu, X, ChevronRight, Plus, PawPrint
+  Menu, X, ChevronRight, Plus, PawPrint, LogOut
 } from 'lucide-react';
 import { PetProvider, usePet } from './context/PetContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import HealthReport from './pages/HealthReport';
 import WeightRecord from './pages/WeightRecord';
@@ -33,6 +35,17 @@ const ALL_NAV = [
   ...NAV,
   { path: '/pets', label: '寵物管理', icon: PawPrint, color: 'text-pink-500', bg: 'bg-pink-50' },
 ];
+
+function LogoutButton() {
+  const { user, signOut } = useAuth();
+  if (!user) return null;
+  return (
+    <button onClick={signOut}
+      className="w-full flex items-center justify-center gap-2 text-xs text-gray-400 hover:text-red-400 py-1 transition-colors">
+      <LogOut size={12} /> 登出 {user.displayName || user.email}
+    </button>
+  );
+}
 
 function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
@@ -120,8 +133,9 @@ function Sidebar({ isOpen, onClose }) {
           })}
         </nav>
 
-        <div className="p-4 border-t border-gray-100">
+        <div className="p-4 border-t border-gray-100 space-y-2">
           <p className="text-xs text-gray-400 text-center">PetLog v1.0</p>
+          <LogoutButton />
         </div>
       </aside>
     </>
@@ -196,12 +210,32 @@ function AppRoutes() {
   );
 }
 
+function AuthGate({ children }) {
+  const { user } = useAuth();
+  if (user === undefined) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-3 animate-bounce">🐾</div>
+          <p className="text-gray-400 text-sm">載入中...</p>
+        </div>
+      </div>
+    );
+  }
+  if (!user) return <Login />;
+  return children;
+}
+
 export default function App() {
   return (
     <Router>
-      <PetProvider>
-        <AppRoutes />
-      </PetProvider>
+      <AuthProvider>
+        <AuthGate>
+          <PetProvider>
+            <AppRoutes />
+          </PetProvider>
+        </AuthGate>
+      </AuthProvider>
     </Router>
   );
 }

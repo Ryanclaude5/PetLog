@@ -118,7 +118,7 @@ export default function VaccineReminder() {
   const [editRecord, setEditRecord] = useState(null);
   const [tab, setTab] = useState('upcoming');
 
-  const load = () => setRecords(vaccineStorage.getAll(pid));
+  const load = async () => setRecords(await vaccineStorage.getAll(pid));
   useEffect(() => { load(); }, [pid]);
 
   function save(form) {

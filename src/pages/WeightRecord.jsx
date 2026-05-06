@@ -14,7 +14,7 @@ export default function WeightRecord() {
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState(defaultForm);
 
-  const load = () => setRecords(weightStorage.getAll(pid));
+  const load = async () => setRecords(await weightStorage.getAll(pid));
   useEffect(() => { load(); }, [pid]);
 
   function submit(e) {

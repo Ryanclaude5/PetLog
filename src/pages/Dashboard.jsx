@@ -45,21 +45,19 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!pid) return;
-    const todayWalks = walkStorage.getToday(pid);
-    const todayBowels = bowelStorage.getToday(pid);
-    const lastWeight = weightStorage.getLast(pid);
-    const lowFood = foodStorage.getAll(pid).filter(f => f.minAmount && parseFloat(f.currentAmount) <= parseFloat(f.minAmount));
-
-    const vaccines = vaccineStorage.getAll(pid);
-    const soon = new Date();
-    soon.setDate(soon.getDate() + 30);
-    const upcomingVaccines = vaccines.filter(v => {
-      if (v.done) return false;
-      if (!v.nextDate) return false;
-      return new Date(v.nextDate) <= soon;
-    });
-
-    setData({ todayWalks, todayBowels, lastWeight, lowFood, upcomingVaccines });
+    (async () => {
+      const [todayWalks, todayBowels, lastWeight, allFood, vaccines] = await Promise.all([
+        walkStorage.getToday(pid),
+        bowelStorage.getToday(pid),
+        weightStorage.getLast(pid),
+        foodStorage.getAll(pid),
+        vaccineStorage.getAll(pid),
+      ]);
+      const lowFood = allFood.filter(f => f.minAmount && parseFloat(f.currentAmount) <= parseFloat(f.minAmount));
+      const soon = new Date(); soon.setDate(soon.getDate() + 30);
+      const upcomingVaccines = vaccines.filter(v => !v.done && v.nextDate && new Date(v.nextDate) <= soon);
+      setData({ todayWalks, todayBowels, lastWeight, lowFood, upcomingVaccines });
+    })();
   }, [pid]);
 
   const now = new Date();

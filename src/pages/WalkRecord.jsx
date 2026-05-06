@@ -221,7 +221,7 @@ export default function WalkRecord() {
   const [editRecord, setEditRecord] = useState(null);
   const [viewMap, setViewMap] = useState(null);
 
-  const load = () => setRecords(walkStorage.getAll(pid));
+  const load = async () => setRecords(await walkStorage.getAll(pid));
   useEffect(() => { load(); }, [pid]);
 
   function save(form) {

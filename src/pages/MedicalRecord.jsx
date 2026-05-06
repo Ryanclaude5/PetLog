@@ -120,7 +120,7 @@ export default function MedicalRecord() {
   const [showForm, setShowForm] = useState(false);
   const [editRecord, setEditRecord] = useState(null);
 
-  const load = () => setRecords(medicalStorage.getAll(pid));
+  const load = async () => setRecords(await medicalStorage.getAll(pid));
   useEffect(() => { load(); }, [pid]);
 
   function save(form) {
